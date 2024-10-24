@@ -1,1 +1,1 @@
-gcloud builds submit --tag southamerica-west1-docker.pkg.dev/dryruns/private-cloudrun-app
+gcloud builds submit --tag southamerica-west1-docker.pkg.dev/dryruns/private-cloudrun-app/private-cloudrun-app:latest
