@@ -19,7 +19,7 @@ In the case of a shared vpc:
 export SERVICE_NAME="private-cloudrun-app"
 export CONNECTOR_NAME="shared-connector"
 export VPC_NAME="shared-vpc"
-export SUBNET_IP_RANGE="10.0.0.128/28"
+export SUBNET_IP_RANGE="10.0.2.0/28"
 export REGION="southamerica-west1"
 export IMAGE_URL="southamerica-west1-docker.pkg.dev/dryruns/private-cloudrun-app/private-cloudrun-app:latest"
 ```
