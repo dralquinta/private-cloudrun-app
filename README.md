@@ -124,3 +124,89 @@ gcloud run deploy $SERVICE_NAME \
     --ingress internal \
     --allow-unauthenticated
 ```
+
+
+---
+
+# Put Load Balancer on top of the service
+
+Export the following variables
+
+```shell
+export LOAD_BALANCER_NAME="private-cloudrun-lb"
+export BACKEND_SERVICE_NAME="cloudrun-backend"
+export NEG_NAME="cloudrun-neg"
+export REGION="southamerica-west1"
+export URL_MAP_NAME="cloudrun-url-map"
+export HTTP_PROXY_NAME="cloudrun-http-proxy"
+export FORWARDING_RULE_NAME="cloudrun-forwarding-rule"
+export INTERNAL_IP_NAME="cloudrun-internal-ip"
+export SUBNET_NAME="custom-subnet-santiago"
+```
+
+
+Create the NEG
+
+```shell
+gcloud compute network-endpoint-groups create $NEG_NAME \
+    --region $REGION \
+    --network-endpoint-type=serverless \
+    --cloud-run-service $SERVICE_NAME \
+    --cloud-run-region $REGION
+```
+
+
+Create the BES 
+
+```shell
+gcloud compute backend-services create $BACKEND_SERVICE_NAME \
+    --load-balancing-scheme=INTERNAL_MANAGED \
+    --protocol=HTTP \
+    --region=$REGION \
+    --health-checks="default"
+```
+
+Add the NEG to the BES 
+
+```shell
+gcloud compute backend-services add-backend $BACKEND_SERVICE_NAME \
+    --network-endpoint-group=$NEG_NAME \
+    --network-endpoint-group-region=$REGION \
+    --region=$REGION
+```
+
+Reserve an internal IP Address
+
+```shell
+gcloud compute addresses create $INTERNAL_IP_NAME \
+    --region=$REGION \
+    --subnet=$SUBNET_NAME \
+    --addresses-type=INTERNAL
+```
+
+Create URL Mapping
+
+```shell
+gcloud compute url-maps create $URL_MAP_NAME \
+    --default-service=$BACKEND_SERVICE_NAME
+```
+
+Create HTTP Proxy Load Balancer
+
+```shell
+gcloud compute target-http-proxies create $HTTP_PROXY_NAME \
+    --url-map=$URL_MAP_NAME
+```
+
+
+Create Forwarding Rule
+
+```shell
+gcloud compute forwarding-rules create $FORWARDING_RULE_NAME \
+    --load-balancing-scheme=INTERNAL_MANAGED \
+    --address=$(gcloud compute addresses describe $INTERNAL_IP_NAME --region $REGION --format="get(address)") \
+    --region=$REGION \
+    --network=$VPC_NAME \
+    --target-http-proxy=$HTTP_PROXY_NAME \
+    --ports=80
+```
